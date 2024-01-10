@@ -203,6 +203,7 @@ export const createPost = async (req, res, next) => {
 export const commentPost = async (req, res, next) => {
   try {
     const { desc } = req.body;
+    console.log(req.body);
     const { userId } = req.body.user;
     const { id } = req.params;
 
@@ -211,7 +212,8 @@ export const commentPost = async (req, res, next) => {
     }
 
     const newComment = new Comments({ desc, user: userId, post: id });
-
+    console.log({ desc });
+    console.log({ newComment });
     await newComment.save();
 
     //updating the post with the comments id
@@ -270,7 +272,7 @@ export const getPosts = async (req, res, next) => {
         select: "name image -password",
       })
       .sort({ _id: -1 });
-    console.log(queryResult);
+
     // pagination
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 5;
@@ -279,7 +281,7 @@ export const getPosts = async (req, res, next) => {
     //records count
     const totalPost = await Posts.countDocuments(queryResult);
 
-    const numOfPage = Math.ceil(totalPost / limit);
+    const numOfPages = Math.ceil(totalPost / limit);
 
     queryResult = queryResult.skip(skip).limit(limit);
 
@@ -290,7 +292,7 @@ export const getPosts = async (req, res, next) => {
       totalPost,
       data: posts,
       page,
-      numOfPage,
+      numOfPages,
     });
   } catch (error) {
     console.log(error);

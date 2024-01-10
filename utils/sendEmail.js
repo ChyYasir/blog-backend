@@ -11,9 +11,13 @@ const { AUTH_EMAIL, AUTH_PASSWORD } = process.env;
 
 let transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
+  // service: "gmail",
   auth: {
     user: AUTH_EMAIL,
     pass: AUTH_PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
@@ -46,7 +50,7 @@ export const sendVerificationEmail = async (user, res, token) => {
 
   try {
     const hashedToken = await hashString(String(otp));
-
+    console.log({ hashedToken });
     const newVerifiedEmail = await Verification.create({
       userId: _id,
       token: hashedToken,
@@ -68,7 +72,7 @@ export const sendVerificationEmail = async (user, res, token) => {
         })
         .catch((err) => {
           console.log(err);
-          res.status(404).json({ message: "Something went wrong" });
+          res.status(404).json({ message: "Something went wrong. Not ok" });
         });
     }
   } catch (error) {
