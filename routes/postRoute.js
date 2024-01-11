@@ -11,6 +11,7 @@ import {
   getPost,
   getPostContent,
   getPosts,
+  getSinglePost,
   stats,
   updatePost,
 } from "../controllers/postController.js";
@@ -22,7 +23,7 @@ router.post("/admin-analytics", userAuth, stats);
 router.post("/admin-followers", userAuth, getFollowers);
 router.post("/admin-content", userAuth, getPostContent);
 router.post("/create-post", userAuth, createPost);
-
+router.get("/admin/:postId", getSinglePost);
 // LIKE & COMMENT ON POST
 router.post("/comment/:id", userAuth, commentPost);
 

@@ -236,21 +236,40 @@ export const commentPost = async (req, res, next) => {
   }
 };
 
-export const updatePost = async (req, res, next) => {
+export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
 
-    const post = await Posts.findByIdAndUpdate(id, { status }, { new: true });
-
-    res.status(200).json({
-      sucess: true,
-      message: "Action performed successfully",
-      data: post,
+    // Only include fields that exist in the request body for update
+    const updateData = {};
+    const allowedFields = ["title", "slug", "desc", "cat", "img", "status"];
+    allowedFields.forEach((field) => {
+      if (req.body.hasOwnProperty(field)) {
+        updateData[field] = req.body[field];
+      }
     });
+    console.log({ updateData });
+    const post = await Posts.findByIdAndUpdate(id, updateData, { new: true });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json({ message: "Post updated successfully", post });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    res.status(500).json({ message: error.message });
+  }
+};
+export const getPostById = async (req, res) => {
+  try {
+    const post = await Posts.findById(req.params.postId).populate(
+      "user",
+      "name image"
+    );
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -445,6 +464,25 @@ export const deleteComment = async (req, res, next) => {
     } else {
       res.status(404).json({ message: "Post or comment not found" });
     }
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+export const getSinglePost = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await Posts.findById(postId).populate({
+      path: "user",
+      select: "name image -password",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Successful",
+      data: post,
+    });
   } catch (error) {
     console.log(error);
     res.status(404).json({ message: error.message });
