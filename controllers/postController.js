@@ -172,9 +172,9 @@ export const getPostContent = async (req, res, next) => {
 export const createPost = async (req, res, next) => {
   try {
     const { userId } = req.body.user;
-    const { desc, img, title, slug, cat } = req.body;
+    const { desc, img, title, slug, cat, shortDesc } = req.body;
 
-    if (!(desc || img || title || cat)) {
+    if (!(desc || img || title || cat || shortDesc)) {
       return next(
         "All fields are required. Please enter a description, title, category and select image."
       );
@@ -187,6 +187,7 @@ export const createPost = async (req, res, next) => {
       title,
       slug,
       cat,
+      shortDesc,
     });
 
     res.status(200).json({
@@ -242,7 +243,15 @@ export const updatePost = async (req, res) => {
 
     // Only include fields that exist in the request body for update
     const updateData = {};
-    const allowedFields = ["title", "slug", "desc", "cat", "img", "status"];
+    const allowedFields = [
+      "title",
+      "slug",
+      "desc",
+      "cat",
+      "img",
+      "status",
+      "shortDesc",
+    ];
     allowedFields.forEach((field) => {
       if (req.body.hasOwnProperty(field)) {
         updateData[field] = req.body[field];
@@ -383,17 +392,19 @@ export const getPost = async (req, res, next) => {
 
     const post = await Posts.findById(postId).populate({
       path: "user",
-      select: "name image -password",
+      select: "name image accountType -password",
     });
 
-    const newView = await Views.create({
-      user: post?.user,
-      post: postId,
-    });
+    if (post?.accountType === "User") {
+      const newView = await Views.create({
+        user: post?.user,
+        post: postId,
+      });
 
-    post.views.push(newView?._id);
+      post.views.push(newView?._id);
 
-    await Posts.findByIdAndUpdate(postId, post);
+      await Posts.findByIdAndUpdate(postId, post);
+    }
 
     res.status(200).json({
       success: true,
