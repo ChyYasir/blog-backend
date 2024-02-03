@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 const emailVerificationSchema = Schema({
-  userId: String,
+  tenantId: String,
   token: String,
   createdAt: Date,
   expiresAt: Date,

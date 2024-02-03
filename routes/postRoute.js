@@ -1,5 +1,6 @@
 import express from "express";
-import userAuth from "../middleware/authMiddleware.js";
+import tenantAuth from "../middleware/tenantAuthMiddleware.js";
+import userAuth from "../middleware/userAuthMiddleware.js";
 import {
   commentPost,
   createPost,
@@ -10,8 +11,9 @@ import {
   getPopularContents,
   getPost,
   getPostContent,
+  getPostTenant,
   getPosts,
-  getSinglePost,
+  getRecentPosts,
   stats,
   updatePost,
 } from "../controllers/postController.js";
@@ -19,25 +21,26 @@ import {
 const router = express.Router();
 
 // ADMIN ROUTES
-router.post("/admin-analytics", userAuth, stats);
-router.post("/admin-followers", userAuth, getFollowers);
-router.post("/admin-content", userAuth, getPostContent);
-router.post("/create-post", userAuth, createPost);
-router.get("/admin/:postId", getSinglePost);
+router.post("/admin-analytics", tenantAuth, stats);
+router.post("/admin-followers", tenantAuth, getFollowers);
+router.post("/admin-content", tenantAuth, getPostContent);
+router.post("/create-post", tenantAuth, createPost);
+router.get("/admin/:postId", getPostTenant);
+router.delete("/:id", tenantAuth, deletePost); // delete post
+router.patch("/update/:id", tenantAuth, updatePost); // update post
+
 // LIKE & COMMENT ON POST
 router.post("/comment/:id", userAuth, commentPost);
 
-// UPDATE POST
-router.patch("/update/:id", userAuth, updatePost);
-
 // GET POSTS ROUTES
-router.get("/", getPosts);
-router.get("/popular", getPopularContents);
-router.get("/:postId", getPost);
 router.get("/comments/:postId", getComments);
+router.get("/", getPosts);
+router.get("/popular/:tenantId", getPopularContents);
+router.get("/recent/:tenantId", getRecentPosts);
+router.get("/:postId/:tenantId", getPost);
 
 // DELETE POSTS ROUTES
-router.delete("/:id", userAuth, deletePost);
+
 router.delete("/comment/:id/:postId", userAuth, deleteComment);
 
 export default router;

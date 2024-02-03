@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const commentSchema = new mongoose.Schema(
   {
+    tenant: { type: Schema.Types.ObjectId, ref: "Tenant" },
     user: { type: Schema.Types.ObjectId, ref: "Users" },
     post: { type: Schema.Types.ObjectId, ref: "Posts" },
     desc: { type: String },

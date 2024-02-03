@@ -1,13 +1,15 @@
 import express from "express";
-import userAuth from "../middleware/authMiddleware.js";
-import { addCategory, getCategories } from "../controllers/categoryControllers.js";
+import tenantAuth from "../middleware/tenantAuthMiddleware.js";
+import {
+  addCategory,
+  getCategories,
+} from "../controllers/categoryControllers.js";
 
 const router = express.Router();
 
 // ADMIN ROUTES
-router.post("/admin/add", userAuth, addCategory);
-
+router.post("/admin/add", tenantAuth, addCategory);
 
 // general
-router.get("/", getCategories); 
+router.get("/", getCategories);
 export default router;

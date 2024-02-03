@@ -4,11 +4,12 @@ import Users from "../models/userModel.js";
 import Views from "../models/viewsModel.js";
 import Followers from "../models/followersModel.js";
 import Comments from "../models/commentModel.js";
+import Tenant from "../models/tenantModel.js";
 
 export const stats = async (req, res, next) => {
   try {
     const { query } = req.query;
-    const { userId } = req.body.user;
+    const { tenantId } = req.body.tenant;
 
     const numofDays = Number(query) || 28;
 
@@ -17,25 +18,30 @@ export const stats = async (req, res, next) => {
     startDate.setDate(currentDate.getDate() - numofDays);
 
     const totalPosts = await Posts.find({
-      user: userId,
+      tenant: tenantId,
       createdAt: { $gte: startDate, $lte: currentDate },
     }).countDocuments();
 
     const totalViews = await Views.find({
-      user: userId,
+      tenant: tenantId,
       createdAt: { $gte: startDate, $lte: currentDate },
     }).countDocuments();
 
-    const totalWriters = await Users.find({
-      accountType: "Writer",
+    // This needs to be corrected
+    // const totalWriters = await Users.find({
+    //   accountType: "Writer",
+    // }).countDocuments();
+
+    const totalComments = await Comments.find({
+      tenant: new mongoose.Types.ObjectId(tenantId),
     }).countDocuments();
 
-    const totalFollowers = await Users.findById(userId);
+    const totalFollowers = await Tenant.findById(tenantId);
 
     const viewStats = await Views.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(userId),
+          tenant: new mongoose.Types.ObjectId(tenantId),
           createdAt: { $gte: startDate, $lte: currentDate },
         },
       },
@@ -53,7 +59,7 @@ export const stats = async (req, res, next) => {
     const followersStats = await Followers.aggregate([
       {
         $match: {
-          writerId: new mongoose.Types.ObjectId(userId),
+          tenantId: new mongoose.Types.ObjectId(tenantId),
           createdAt: { $gte: startDate, $lte: currentDate },
         },
       },
@@ -68,7 +74,7 @@ export const stats = async (req, res, next) => {
       { $sort: { _id: 1 } },
     ]);
 
-    const last5Followers = await Users.findById(userId).populate({
+    const last5Followers = await Tenant.findById(tenantId).populate({
       path: "followers",
       options: { sort: { _id: -1 } },
       perDocumentLimit: 5,
@@ -78,7 +84,7 @@ export const stats = async (req, res, next) => {
       },
     });
 
-    const last5Posts = await Posts.find({ user: userId })
+    const last5Posts = await Posts.find({ tenant: tenantId })
       .limit(5)
       .sort({ _id: -1 });
 
@@ -87,12 +93,13 @@ export const stats = async (req, res, next) => {
       message: "Data loaded successfully",
       totalPosts,
       totalViews,
-      totalWriters,
+      // totalWriters,
       followers: totalFollowers?.followers?.length,
       viewStats,
       followersStats,
       last5Followers: last5Followers?.followers,
       last5Posts,
+      totalComments,
     });
   } catch (error) {
     console.log(error);
@@ -102,14 +109,14 @@ export const stats = async (req, res, next) => {
 
 export const getFollowers = async (req, res, next) => {
   try {
-    const { userId } = req.body.user;
+    const { tenantId } = req.body.tenant;
     // console.log({userId})
     // pagination
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 8;
     const skip = (page - 1) * limit; //2-1 * 8 = 8
 
-    const result = await Users.findById(userId).populate({
+    const result = await Tenant.findById(tenantId).populate({
       path: "followers",
       options: { sort: { _id: -1 }, limit: limit, skip: skip },
       populate: {
@@ -118,7 +125,7 @@ export const getFollowers = async (req, res, next) => {
       },
     });
 
-    const totalFollowers = await Users.findById(userId);
+    const totalFollowers = await Tenant.findById(tenantId);
 
     const numOfPages = Math.ceil(totalFollowers?.followers?.length / limit);
 
@@ -136,11 +143,14 @@ export const getFollowers = async (req, res, next) => {
 
 export const getPostContent = async (req, res, next) => {
   try {
-    const { userId } = req.body.user;
+    const { tenantId } = req.body.tenant;
 
-    let queryResult = Posts.find({ user: userId }).sort({
-      _id: -1,
-    });
+    let queryResult = Posts.find({ tenant: tenantId })
+      .sort({ _id: -1 })
+      .populate({
+        path: "comments",
+        populate: { path: "user", select: "name" }, // Assuming you want to also populate the user details in each comment
+      });
 
     // pagination
     const page = Number(req.query.page) || 1;
@@ -148,7 +158,7 @@ export const getPostContent = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     //records count
-    const totalPost = await Posts.countDocuments({ user: userId });
+    const totalPost = await Posts.countDocuments({ tenant: tenantId });
     const numOfPage = Math.ceil(totalPost / limit);
 
     queryResult = queryResult.skip(skip).limit(limit);
@@ -171,7 +181,7 @@ export const getPostContent = async (req, res, next) => {
 
 export const createPost = async (req, res, next) => {
   try {
-    const { userId } = req.body.user;
+    const { tenantId } = req.body.tenant;
     const { desc, img, title, slug, cat, shortDesc } = req.body;
 
     if (!(desc || img || title || cat || shortDesc)) {
@@ -181,7 +191,7 @@ export const createPost = async (req, res, next) => {
     }
 
     const post = await Posts.create({
-      user: userId,
+      tenant: tenantId,
       desc,
       img,
       title,
@@ -240,7 +250,7 @@ export const commentPost = async (req, res, next) => {
 export const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
-
+    const { tenantId } = req.body.tenant;
     // Only include fields that exist in the request body for update
     const updateData = {};
     const allowedFields = [
@@ -257,8 +267,12 @@ export const updatePost = async (req, res) => {
         updateData[field] = req.body[field];
       }
     });
-    console.log({ updateData });
-    const post = await Posts.findByIdAndUpdate(id, updateData, { new: true });
+    // console.log({ updateData });
+    const post = await Posts.findOneAndUpdate(
+      { _id: id, tenant: tenantId },
+      updateData,
+      { new: true }
+    );
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
@@ -267,36 +281,22 @@ export const updatePost = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-export const getPostById = async (req, res) => {
-  try {
-    const post = await Posts.findById(req.params.postId).populate(
-      "user",
-      "name image"
-    );
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-    res.status(200).json(post);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 export const getPosts = async (req, res, next) => {
   try {
-    const { cat, writerId } = req.query;
-
+    const { cat, tenantId } = req.query;
+    console.log({ cat, tenantId });
     let query = { status: true };
 
     if (cat) {
       query.cat = cat;
-    } else if (writerId) {
-      query.user = writerId;
+    } else if (tenantId) {
+      query.tenant = tenantId;
     }
 
     let queryResult = Posts.find(query)
       .populate({
-        path: "user",
+        path: "tenant",
         select: "name image -password",
       })
       .sort({ _id: -1 });
@@ -329,11 +329,13 @@ export const getPosts = async (req, res, next) => {
 };
 
 export const getPopularContents = async (req, res, next) => {
+  const { tenantId } = req.params;
   try {
     const posts = await Posts.aggregate([
       {
         $match: {
           status: true,
+          tenant: new mongoose.Types.ObjectId(tenantId),
         },
       },
       {
@@ -354,57 +356,78 @@ export const getPopularContents = async (req, res, next) => {
       },
     ]);
 
-    const writers = await Users.aggregate([
-      {
-        $match: {
-          accountType: { $ne: "User" },
-        },
-      },
-      {
-        $project: {
-          name: 1,
-          image: 1,
-          followers: { $size: "$followers" },
-        },
-      },
-      {
-        $sort: { followers: -1 },
-      },
-      {
-        $limit: 5,
-      },
-    ]);
+    // const writers = await Users.aggregate([
+    //   {
+    //     $match: {
+    //       accountType: { $ne: "User" },
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       name: 1,
+    //       image: 1,
+    //       followers: { $size: "$followers" },
+    //     },
+    //   },
+    //   {
+    //     $sort: { followers: -1 },
+    //   },
+    //   {
+    //     $limit: 5,
+    //   },
+    // ]);
 
     res.status(200).json({
       success: true,
       message: "Successful",
-      data: { posts, writers },
+      data: { posts },
     });
   } catch (error) {
     console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
+export const getRecentPosts = async (req, res, next) => {
+  const { tenantId } = req.params;
+  try {
+    const recentPosts = await Posts.find({
+      tenant: new mongoose.Types.ObjectId(tenantId),
+      status: true,
+    })
+      .sort({ createdAt: -1 }) // Sort by creation date in descending order
+      .limit(5) // Limit to 5 posts
+      .select("title slug img cat views createdAt"); // Select specific fields
 
+    res.status(200).json({
+      success: true,
+      message: "Recent posts fetched successfully",
+      data: recentPosts,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(404).json({ message: error.message });
+  }
+};
 export const getPost = async (req, res, next) => {
   try {
-    const { postId } = req.params;
+    const { postId, tenantId } = req.params;
 
     const post = await Posts.findById(postId).populate({
-      path: "user",
+      path: "tenant",
       select: "name image accountType -password",
     });
 
-    if (post?.accountType === "User") {
-      const newView = await Views.create({
-        user: post?.user,
-        post: postId,
-      });
+    const newView = await Views.create({
+      tenant: tenantId,
+      user: post?.user,
+      post: postId,
+    });
 
-      post.views.push(newView?._id);
+    post.views.push(newView?._id);
 
-      await Posts.findByIdAndUpdate(postId, post);
-    }
+    await Posts.findByIdAndUpdate(postId, {
+      $addToSet: { views: newView?._id },
+    });
 
     res.status(200).json({
       success: true,
@@ -418,9 +441,13 @@ export const getPost = async (req, res, next) => {
 };
 
 export const getComments = async (req, res, next) => {
+  const { postId } = req.params;
+  console.log(req.params);
+  // console.log("postId:", postId);
   try {
-    const { postId } = req.params;
-
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ message: "Invalid Post ID" });
+    }
     const postComments = await Comments.find({ post: postId })
       .populate({
         path: "user",
@@ -441,10 +468,19 @@ export const getComments = async (req, res, next) => {
 
 export const deletePost = async (req, res, next) => {
   try {
-    const { userId } = req.body.user;
+    const { tenantId } = req.body.tenant;
     const { id } = req.params;
 
-    await Posts.findOneAndDelete({ _id: id, user: userId });
+    // Check if the document exists before attempting to delete
+    const post = await Posts.findOne({ _id: id, tenant: tenantId });
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    await Posts.findOneAndDelete({ _id: id, tenant: tenantId });
 
     res.status(200).json({
       success: true,
@@ -480,12 +516,12 @@ export const deleteComment = async (req, res, next) => {
     res.status(404).json({ message: error.message });
   }
 };
-export const getSinglePost = async (req, res, next) => {
+export const getPostTenant = async (req, res, next) => {
   try {
     const { postId } = req.params;
 
     const post = await Posts.findById(postId).populate({
-      path: "user",
+      path: "tenant",
       select: "name image -password",
     });
 

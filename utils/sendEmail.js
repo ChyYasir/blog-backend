@@ -10,8 +10,9 @@ dotenv.config();
 const { AUTH_EMAIL, AUTH_PASSWORD } = process.env;
 
 let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  // service: "gmail",
+  host: "smtp.office365.com", // Outlook SMTP server
+  port: 587, // Port for TLS (you can also use 465 for SSL, but it's less common)
+  service: "outlook",
   auth: {
     user: AUTH_EMAIL,
     pass: AUTH_PASSWORD,
@@ -19,10 +20,13 @@ let transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false,
   },
+  // logger: true, // Enable logging
+  // debug: true,
 });
 
-export const sendVerificationEmail = async (user, res, token) => {
-  const { _id, email, name } = user;
+export const sendVerificationEmailTenant = async (tenant, res, token) => {
+  const { _id, email, name } = tenant;
+  console.log({ tenant });
   const otp = generateOTP();
 
   //   mail options
@@ -43,22 +47,24 @@ export const sendVerificationEmail = async (user, res, token) => {
     </p>
     <div style="margin-top: 20px;">
         <h5>Regards</h5>
-        <h5>BlogWave</h5>
+        <h5>BreakByte</h5>
     </div>
 </div>`,
   };
 
   try {
     const hashedToken = await hashString(String(otp));
+    console.log({ _id });
     console.log({ hashedToken });
     const newVerifiedEmail = await Verification.create({
-      userId: _id,
+      tenantId: _id,
       token: hashedToken,
       createdAt: Date.now(),
       expiresAt: Date.now() + 120000,
     });
 
     if (newVerifiedEmail) {
+      console.log(newVerifiedEmail);
       transporter
         .sendMail(mailOptions)
         .then(() => {
@@ -66,13 +72,13 @@ export const sendVerificationEmail = async (user, res, token) => {
             success: "PENDING",
             message:
               "OTP has been sent to your account. Check your email and verify your email.",
-            user,
+            tenant,
             token,
           });
         })
         .catch((err) => {
           console.log(err);
-          res.status(404).json({ message: "Something went wrong. Not ok" });
+          res.status(404).json({ message: "Couldn't Send OTP to your Email" });
         });
     }
   } catch (error) {

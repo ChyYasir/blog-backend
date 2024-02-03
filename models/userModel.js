@@ -8,8 +8,12 @@ const userSchema = new mongoose.Schema(
     accountType: { type: String, default: "User" },
     image: { type: String },
     password: { type: String, select: true },
-    provider: { type: String, default: "Codewave" },
-    followers: [{ type: Schema.Types.ObjectId, ref: "Followers" }],
+    provider: { type: String, default: "BreakByte" },
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tenant",
+      required: true,
+    },
   },
   { timestamps: true }
 );

@@ -9,7 +9,7 @@ const postSchema = new mongoose.Schema(
     img: { type: String },
     cat: { type: String },
     views: [{ type: Schema.Types.ObjectId, ref: "Views" }],
-    user: { type: Schema.Types.ObjectId, ref: "Users" },
+    tenant: { type: Schema.Types.ObjectId, ref: "Tenant" },
     comments: [{ type: Schema.Types.ObjectId, ref: "Comments" }],
     status: { type: Boolean, default: true },
   },
