@@ -36,8 +36,8 @@ export const stats = async (req, res, next) => {
       tenant: new mongoose.Types.ObjectId(tenantId),
     }).countDocuments();
 
-    const totalFollowers = await Tenant.findById(tenantId);
-
+    const totalFollowers = await Users.find({ tenantId: tenantId });
+    console.log({ totalFollowers });
     const viewStats = await Views.aggregate([
       {
         $match: {
@@ -56,7 +56,7 @@ export const stats = async (req, res, next) => {
       { $sort: { _id: 1 } },
     ]);
 
-    const followersStats = await Followers.aggregate([
+    const followersStats = await Users.aggregate([
       {
         $match: {
           tenantId: new mongoose.Types.ObjectId(tenantId),
@@ -74,16 +74,12 @@ export const stats = async (req, res, next) => {
       { $sort: { _id: 1 } },
     ]);
 
-    const last5Followers = await Tenant.findById(tenantId).populate({
-      path: "followers",
-      options: { sort: { _id: -1 } },
-      perDocumentLimit: 5,
-      populate: {
-        path: "followerId",
-        select: "name email image accountType followers -password",
-      },
-    });
+    const last5Followers = await Users.find({ tenantId: tenantId })
+      .select("-password") // Exclude password from the result
+      .sort({ _id: -1 })
+      .limit(5);
 
+    console.log({ last5Followers });
     const last5Posts = await Posts.find({ tenant: tenantId })
       .limit(5)
       .sort({ _id: -1 });
@@ -94,10 +90,10 @@ export const stats = async (req, res, next) => {
       totalPosts,
       totalViews,
       // totalWriters,
-      followers: totalFollowers?.followers?.length,
+      followers: totalFollowers?.length,
       viewStats,
       followersStats,
-      last5Followers: last5Followers?.followers,
+      last5Followers: last5Followers,
       last5Posts,
       totalComments,
     });
@@ -216,13 +212,18 @@ export const commentPost = async (req, res, next) => {
     const { desc } = req.body;
     console.log(req.body);
     const { userId } = req.body.user;
-    const { id } = req.params;
+    const { id, tenantId } = req.params;
 
     if (desc === null) {
       return res.status(404).json({ message: "Comment is required." });
     }
 
-    const newComment = new Comments({ desc, user: userId, post: id });
+    const newComment = new Comments({
+      desc,
+      user: userId,
+      post: id,
+      tenant: tenantId,
+    });
     console.log({ desc });
     console.log({ newComment });
     await newComment.save();

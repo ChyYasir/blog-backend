@@ -64,7 +64,7 @@ export const sendVerificationEmailTenant = async (tenant, res, token) => {
     });
 
     if (newVerifiedEmail) {
-      console.log(newVerifiedEmail);
+      // console.log(newVerifiedEmail);
       transporter
         .sendMail(mailOptions)
         .then(() => {
@@ -84,5 +84,49 @@ export const sendVerificationEmailTenant = async (tenant, res, token) => {
   } catch (error) {
     console.log(error);
     res.status(404).json({ message: "Something went wrong" });
+  }
+};
+
+export const sendPasswordResetEmail = async (recipientEmail, resetLink) => {
+  try {
+    const mailOptions = {
+      from: AUTH_EMAIL, // Sender address
+      to: recipientEmail, // List of recipients
+      subject: "Password Reset Request", // Subject line
+      html: `<p>You requested a password reset. Please follow this link to reset your password:</p>
+             <p><a href="${resetLink}">${resetLink}</a></p>
+             <p>If you did not request a password reset, please ignore this email.</p>`, // HTML body
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Message sent: %s", info.messageId);
+
+    // Optionally return or log the response
+    return info;
+  } catch (error) {
+    console.error("Failed to send password reset email:", error);
+    throw error; // Rethrow or handle error appropriately
+  }
+};
+export const sendForgotPasswordEmail = async (recipientEmail, resetLink) => {
+  try {
+    const mailOptions = {
+      from: AUTH_EMAIL, // Sender address
+      to: recipientEmail, // List of recipients
+      subject: "Password Reset Request", // Subject line
+      html: `<p>You requested a password reset.Please follow this link to reset your password:</p>
+             <p><a href="${resetLink}">${resetLink}</a></p>
+             <p>Please do not share this link with anyone.</p>
+             <p>If you did not request a password reset, please ignore this email.</p>`, // HTML body
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Message sent: %s", info.messageId);
+
+    // Optionally return or log the response
+    return info;
+  } catch (error) {
+    console.error("Failed to send password reset email:", error);
+    throw error; // Rethrow or handle error appropriately
   }
 };

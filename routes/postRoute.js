@@ -30,7 +30,7 @@ router.delete("/:id", tenantAuth, deletePost); // delete post
 router.patch("/update/:id", tenantAuth, updatePost); // update post
 
 // LIKE & COMMENT ON POST
-router.post("/comment/:id", userAuth, commentPost);
+router.post("/comment/:id/:tenantId", userAuth, commentPost);
 
 // GET POSTS ROUTES
 router.get("/comments/:postId", getComments);
