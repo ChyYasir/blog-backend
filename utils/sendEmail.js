@@ -26,7 +26,7 @@ let transporter = nodemailer.createTransport({
 
 export const sendVerificationEmailTenant = async (tenant, res, token) => {
   const { _id, email, name } = tenant;
-  console.log({ tenant });
+  //console.log({ tenant });
   const otp = generateOTP();
 
   //   mail options
@@ -54,8 +54,8 @@ export const sendVerificationEmailTenant = async (tenant, res, token) => {
 
   try {
     const hashedToken = await hashString(String(otp));
-    console.log({ _id });
-    console.log({ hashedToken });
+    //console.log({ _id });
+    //console.log({ hashedToken });
     const newVerifiedEmail = await Verification.create({
       tenantId: _id,
       token: hashedToken,
@@ -64,7 +64,7 @@ export const sendVerificationEmailTenant = async (tenant, res, token) => {
     });
 
     if (newVerifiedEmail) {
-      // console.log(newVerifiedEmail);
+      // //console.log(newVerifiedEmail);
       transporter
         .sendMail(mailOptions)
         .then(() => {
@@ -77,12 +77,12 @@ export const sendVerificationEmailTenant = async (tenant, res, token) => {
           });
         })
         .catch((err) => {
-          console.log(err);
+          //console.log(err);
           res.status(404).json({ message: "Couldn't Send OTP to your Email" });
         });
     }
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: "Something went wrong" });
   }
 };
@@ -99,7 +99,7 @@ export const sendPasswordResetEmail = async (recipientEmail, resetLink) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("Message sent: %s", info.messageId);
+    //console.log("Message sent: %s", info.messageId);
 
     // Optionally return or log the response
     return info;
@@ -121,7 +121,7 @@ export const sendForgotPasswordEmail = async (recipientEmail, resetLink) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("Message sent: %s", info.messageId);
+    //console.log("Message sent: %s", info.messageId);
 
     // Optionally return or log the response
     return info;

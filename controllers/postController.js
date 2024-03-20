@@ -37,7 +37,7 @@ export const stats = async (req, res, next) => {
     }).countDocuments();
 
     const totalFollowers = await Users.find({ tenantId: tenantId });
-    console.log({ totalFollowers });
+    //console.log({ totalFollowers });
     const viewStats = await Views.aggregate([
       {
         $match: {
@@ -79,7 +79,7 @@ export const stats = async (req, res, next) => {
       .sort({ _id: -1 })
       .limit(5);
 
-    console.log({ last5Followers });
+    //console.log({ last5Followers });
     const last5Posts = await Posts.find({ tenant: tenantId })
       .limit(5)
       .sort({ _id: -1 });
@@ -98,7 +98,7 @@ export const stats = async (req, res, next) => {
       totalComments,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -106,7 +106,7 @@ export const stats = async (req, res, next) => {
 export const getFollowers = async (req, res, next) => {
   try {
     const { tenantId } = req.body.tenant;
-    // console.log({userId})
+    // //console.log({userId})
     // pagination
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 8;
@@ -132,7 +132,7 @@ export const getFollowers = async (req, res, next) => {
       page,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -170,7 +170,7 @@ export const getPostContent = async (req, res, next) => {
       numOfPage,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -202,7 +202,7 @@ export const createPost = async (req, res, next) => {
       data: post,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -210,7 +210,7 @@ export const createPost = async (req, res, next) => {
 export const commentPost = async (req, res, next) => {
   try {
     const { desc } = req.body;
-    console.log(req.body);
+    //console.log(req.body);
     const { userId } = req.body.user;
     const { id, tenantId } = req.params;
 
@@ -224,8 +224,8 @@ export const commentPost = async (req, res, next) => {
       post: id,
       tenant: tenantId,
     });
-    console.log({ desc });
-    console.log({ newComment });
+    //console.log({ desc });
+    //console.log({ newComment });
     await newComment.save();
 
     //updating the post with the comments id
@@ -243,7 +243,7 @@ export const commentPost = async (req, res, next) => {
       newComment,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -268,7 +268,7 @@ export const updatePost = async (req, res) => {
         updateData[field] = req.body[field];
       }
     });
-    // console.log({ updateData });
+    // //console.log({ updateData });
     const post = await Posts.findOneAndUpdate(
       { _id: id, tenant: tenantId },
       updateData,
@@ -286,7 +286,7 @@ export const updatePost = async (req, res) => {
 export const getPosts = async (req, res, next) => {
   try {
     const { cat, tenantId } = req.query;
-    console.log({ cat, tenantId });
+    //console.log({ cat, tenantId });
     let query = { status: true };
 
     if (cat) {
@@ -324,7 +324,7 @@ export const getPosts = async (req, res, next) => {
       numOfPages,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -384,7 +384,7 @@ export const getPopularContents = async (req, res, next) => {
       data: { posts },
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -436,15 +436,15 @@ export const getPost = async (req, res, next) => {
       data: post,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
 
 export const getComments = async (req, res, next) => {
   const { postId } = req.params;
-  console.log(req.params);
-  // console.log("postId:", postId);
+  //console.log(req.params);
+  // //console.log("postId:", postId);
   try {
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       return res.status(400).json({ message: "Invalid Post ID" });
@@ -462,7 +462,7 @@ export const getComments = async (req, res, next) => {
       data: postComments,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -488,7 +488,7 @@ export const deletePost = async (req, res, next) => {
       message: "Deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -513,7 +513,7 @@ export const deleteComment = async (req, res, next) => {
       res.status(404).json({ message: "Post or comment not found" });
     }
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -532,7 +532,7 @@ export const getPostTenant = async (req, res, next) => {
       data: post,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };

@@ -63,16 +63,19 @@ export const register = async (req, res, next) => {
     });
     // }
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
 
 export const googleSignUp = async (req, res, next) => {
-  try {
-    const { name, email, image, emailVerified, tenantId } = req.body;
+  const { name, email, image, emailVerified, tenantId } = req.body;
 
-    const userExists = await Users.findOne({ email, tenantId });
+  try {
+    const userExists = await Users.findOne({
+      tenantId: tenantId,
+      email: email,
+    });
 
     if (userExists) {
       next("Email Address already exists. Try Login");
@@ -99,7 +102,7 @@ export const googleSignUp = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -154,7 +157,7 @@ export const login = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ success: "failed", message: error.message });
   }
 };
@@ -209,12 +212,12 @@ export const loginTenant = async (req, res, next) => {
     }
     tenant.password = undefined;
     const token = createJWT(tenant?._id);
-    console.log({ token });
+    //console.log({ token });
     res
       .status(201)
       .json({ success: true, message: "Login successfully", tenant, token });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ success: "failed", message: error.message });
   }
 };

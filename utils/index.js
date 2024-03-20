@@ -13,7 +13,7 @@ export const compareString = async (userPassword, password) => {
     const isMatch = await bcrypt?.compare(userPassword, password);
     return isMatch;
   } catch (error) {
-    console.log(error);
+    //console.log(error);
   }
 };
 

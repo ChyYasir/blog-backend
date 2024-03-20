@@ -2,18 +2,18 @@ import JWT from "jsonwebtoken";
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req?.headers?.authorization;
-  console.log(authHeader);
+  //console.log(authHeader);
   if (!authHeader || !authHeader?.startsWith("Bearer")) {
     return next(new Error("Authentication failed: Token not provided"));
   }
 
   const token = authHeader?.split(" ")[1];
-  // console.log({authHeader})
-  // console.log({token})
+  // //console.log({authHeader})
+  // //console.log({token})
 
   try {
     const tenantToken = JWT.verify(token, process.env.JWT_SECRET_KEY);
-    console.log({ tenantToken });
+    //console.log({ tenantToken });
     req.body.tenant = {
       tenantId: tenantToken.tenantId,
     };

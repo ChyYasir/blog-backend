@@ -39,7 +39,7 @@ export const OTPVerification = async (req, res, next) => {
       }
     }
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: "Something went wrong" });
   }
 };
@@ -58,13 +58,13 @@ export const resendOTP = async (req, res, next) => {
 
     sendVerificationEmailTenant(tenant, res, token);
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: "Something went wrong" });
   }
 };
 export const getTenantFollowers = async (req, res) => {
   const { tenantId } = req.body.tenant;
-  // console.log(req.body);
+  // //console.log(req.body);
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
@@ -95,17 +95,17 @@ export const getTenantFollowers = async (req, res) => {
 };
 export const requestPasswordReset = async (req, res, next) => {
   const { email } = req.body;
-  // console.log({ email });
+  // //console.log({ email });
   try {
     const tenant = await Tenant.findOne({ email });
     if (!tenant) {
       return res.status(404).json({ message: "Tenant not found" });
     }
-    // console.log({ tenant });
+    // //console.log({ tenant });
     // Generate token
     const resetToken = createJWT(tenant._id);
     // const hash = await hashString(resetToken);
-    // console.log({ hash });
+    // //console.log({ hash });
 
     // Save token in the database
     await new ResetToken({
@@ -129,10 +129,10 @@ export const requestPasswordReset = async (req, res, next) => {
 
 export const resetPassword = async (req, res, next) => {
   const { token, oldPassword, newPassword } = req.body;
-  console.log(req.body);
+  //console.log(req.body);
   try {
     // const hashedToken = await hashString(token);
-    // console.log({ hashedToken });
+    // //console.log({ hashedToken });
     const resetToken = await ResetToken.findOne({ token: token });
     if (!resetToken || resetToken.expiresAt < Date.now()) {
       return res
@@ -140,7 +140,7 @@ export const resetPassword = async (req, res, next) => {
         .json({ message: "Invalid or expired password reset token" });
     }
 
-    console.log({ resetToken });
+    //console.log({ resetToken });
     const tenant = await Tenant.findById(resetToken.tenantId);
     if (!tenant) {
       return res.status(404).json({ message: "Tenant not found" });
@@ -166,10 +166,10 @@ export const resetPassword = async (req, res, next) => {
 };
 export const forgotResetPassword = async (req, res, next) => {
   const { token, newPassword } = req.body;
-  console.log(req.body);
+  //console.log(req.body);
   try {
     // const hashedToken = await hashString(token);
-    // console.log({ hashedToken });
+    // //console.log({ hashedToken });
     const resetToken = await ResetToken.findOne({ token: token });
     if (!resetToken || resetToken.expiresAt < Date.now()) {
       return res
@@ -177,7 +177,7 @@ export const forgotResetPassword = async (req, res, next) => {
         .json({ message: "Invalid or expired password reset token" });
     }
 
-    console.log({ resetToken });
+    //console.log({ resetToken });
     const tenant = await Tenant.findById(resetToken.tenantId);
     if (!tenant) {
       return res.status(404).json({ message: "Tenant not found" });

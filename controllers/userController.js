@@ -35,7 +35,7 @@ import { compareString, createJWT } from "../utils/index.js";
 //       }
 //     }
 //   } catch (error) {
-//     console.log(error);
+//     //console.log(error);
 //     res.status(404).json({ message: "Something went wrong" });
 //   }
 // };
@@ -56,7 +56,7 @@ import { compareString, createJWT } from "../utils/index.js";
 //       sendVerificationEmail(user, res, token);
 //     } else res.status(404).json({ message: "Something went wrong" });
 //   } catch (error) {
-//     console.log(error);
+//     //console.log(error);
 //     res.status(404).json({ message: "Something went wrong" });
 //   }
 // };
@@ -90,7 +90,7 @@ export const followWritter = async (req, res, next) => {
       message: "You're now following writer " + writer?.name,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -125,7 +125,7 @@ export const updateUser = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: error.message });
   }
 };
@@ -153,7 +153,7 @@ export const getWriter = async (req, res, next) => {
       data: user,
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     res.status(404).json({ message: "Something went wrong" });
   }
 };
