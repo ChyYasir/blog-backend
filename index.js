@@ -30,5 +30,5 @@ app.use(routes);
 app.use(errorMiddleware);
 
 app.listen(PORT, () => {
-  //console.log("Server running of port " + PORT);
+  console.log("Server running of port " + PORT);
 });
